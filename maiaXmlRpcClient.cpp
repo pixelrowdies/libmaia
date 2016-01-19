@@ -28,6 +28,8 @@
 #include "maiaXmlRpcClient.h"
 #include "maiaFault.h"
 
+#include <QDebug>
+
 MaiaXmlRpcClient::MaiaXmlRpcClient(QObject* parent) : QObject(parent),
 	manager(this), request() 
 {
@@ -80,7 +82,43 @@ QNetworkReply* MaiaXmlRpcClient::call(QString method, QList<QVariant> args,
 		call->prepareCall(method, args).toUtf8() );
 
 	callmap[reply] = call;
-	return reply;
+    return reply;
+}
+
+QNetworkReply *MaiaXmlRpcClient::call(const QString &method, const QVariantMap &namedParams,
+                                      QObject *responseObject, const char *responseSlot,
+                                      QObject *faultObject, const char *faultSlot)
+{
+    QVariantList args;
+    args.append(namedParams);
+
+    return call(method, args, responseObject, responseSlot, faultObject, faultSlot);
+}
+
+QNetworkReply *MaiaXmlRpcClient::call(const QString &method, const QVariantList &args, ResponseCallback responseCallback, FaultCallback faultCallback)
+{
+    MaiaObject* call = new MaiaObject(this);
+    connect(call, &MaiaObject::aresponse, responseCallback);
+
+    if (faultCallback) {
+        connect(call, &MaiaObject::fault, faultCallback);
+    } else {
+        connect(call, &MaiaObject::fault, this, &MaiaXmlRpcClient::defaultFaultHandler);
+    }
+
+    QNetworkReply* reply = manager.post( request,
+        call->prepareCall(method, args).toUtf8() );
+
+    callmap[reply] = call;
+    return reply;
+}
+
+QNetworkReply *MaiaXmlRpcClient::call(const QString &method, const QVariantMap &namedParams, ResponseCallback responseCallback, FaultCallback faultCallback)
+{
+    QVariantList args;
+    args.append(namedParams);
+
+    return call(method, args, responseCallback, faultCallback);
 }
 
 void MaiaXmlRpcClient::setSslConfiguration(const QSslConfiguration &config) {
@@ -110,5 +148,10 @@ void MaiaXmlRpcClient::replyFinished(QNetworkReply* reply) {
 	// parseResponse deletes the MaiaObject
 	callmap[reply]->parseResponse(response, reply);
 	reply->deleteLater();
-	callmap.remove(reply);
+    callmap.remove(reply);
+}
+
+void MaiaXmlRpcClient::defaultFaultHandler(int error, const QString &message)
+{
+    qDebug() << Q_FUNC_INFO << error << message;
 }

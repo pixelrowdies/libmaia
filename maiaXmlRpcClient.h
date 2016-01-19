@@ -32,7 +32,12 @@
 #include <QtXml>
 #include <QtNetwork>
 
+#include <functional>
+
 #include "maiaObject.h"
+
+typedef std::function<void(QVariant &)> ResponseCallback;
+typedef std::function<void(int, const QString &)> FaultCallback;
 
 class MaiaXmlRpcClient : public QObject {
 	Q_OBJECT
@@ -43,9 +48,23 @@ class MaiaXmlRpcClient : public QObject {
 		MaiaXmlRpcClient(QUrl url, QString userAgent, QObject *parent = 0);
 		void setUrl(QUrl url);
 		void setUserAgent(QString userAgent);
-		QNetworkReply* call(QString method, QList<QVariant> args,
-		QObject* responseObject, const char* responseSlot,
-		QObject* faultObject, const char* faultSlot);
+
+        QNetworkReply* call(QString method, QList<QVariant> args,
+                            QObject* responseObject, const char* responseSlot,
+                            QObject* faultObject, const char* faultSlot);
+
+        QNetworkReply *call(const QString &method, const QVariantMap &namedParams,
+                            QObject *responseObject, const char *responseSlot,
+                            QObject *faultObject, const char* faultSlot);
+
+        QNetworkReply *call(const QString &method, const QVariantList &args,
+                            ResponseCallback responseCallback,
+                            FaultCallback faultCallback = NULL);
+
+        QNetworkReply *call(const QString &method, const QVariantMap &namedParams,
+                            ResponseCallback responseCallback,
+                            FaultCallback faultCallback = NULL);
+
 		void setSslConfiguration(const QSslConfiguration &config);
 		QSslConfiguration sslConfiguration () const;
 
@@ -56,6 +75,7 @@ class MaiaXmlRpcClient : public QObject {
 	
 	private slots:
 		void replyFinished(QNetworkReply*);
+        void defaultFaultHandler(int error, const QString &message);
 
 	private:
 		void init();
