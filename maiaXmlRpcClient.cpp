@@ -88,7 +88,12 @@ void MaiaXmlRpcClient::setSslConfiguration(const QSslConfiguration &config) {
 }
 
 QSslConfiguration MaiaXmlRpcClient::sslConfiguration () const {
-	return request.sslConfiguration();
+    return request.sslConfiguration();
+}
+
+QNetworkAccessManager *MaiaXmlRpcClient::networkAccessManager()
+{
+    return &manager;
 }
 
 void MaiaXmlRpcClient::replyFinished(QNetworkReply* reply) {

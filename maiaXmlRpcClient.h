@@ -48,6 +48,8 @@ class MaiaXmlRpcClient : public QObject {
 		QObject* faultObject, const char* faultSlot);
 		void setSslConfiguration(const QSslConfiguration &config);
 		QSslConfiguration sslConfiguration () const;
+
+        QNetworkAccessManager *networkAccessManager();
 	
 	signals:
 		void sslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
