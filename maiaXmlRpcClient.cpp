@@ -121,6 +121,25 @@ QNetworkReply *MaiaXmlRpcClient::call(const QString &method, const QVariantMap &
     return call(method, args, responseCallback, faultCallback);
 }
 
+MaiaObject *MaiaXmlRpcClient::callWithObject(const QString &method, const QVariantMap &namedParams)
+{
+    QVariantList args;
+    args.append(namedParams);
+
+    return callWithObject(method, args);
+}
+
+MaiaObject *MaiaXmlRpcClient::callWithObject(const QString &method, const QVariantList &args)
+{
+    MaiaObject* call = new MaiaObject(this);
+
+    QNetworkReply* reply = manager.post( request,
+        call->prepareCall(method, args).toUtf8() );
+
+    callmap[reply] = call;
+    return call;
+}
+
 void MaiaXmlRpcClient::setSslConfiguration(const QSslConfiguration &config) {
 	request.setSslConfiguration(config);
 }

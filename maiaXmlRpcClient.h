@@ -65,6 +65,9 @@ class MaiaXmlRpcClient : public QObject {
                             ResponseCallback responseCallback,
                             FaultCallback faultCallback = NULL);
 
+        MaiaObject *callWithObject(const QString& method, const QVariantMap &namedParams);
+        MaiaObject *callWithObject(const QString& method, const QVariantList &args);
+
 		void setSslConfiguration(const QSslConfiguration &config);
 		QSslConfiguration sslConfiguration () const;
 
